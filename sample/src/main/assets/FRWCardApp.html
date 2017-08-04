@@ -1,0 +1,43 @@
+<html>
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <script src="FRWCardApp.js"></script>
+    <title>
+        hybrid交互
+    </title>
+</head>
+
+<body>
+<p>
+    <xmp id="show">
+    </xmp>
+</p>
+<p>
+    <xmp id="init">
+    </xmp>
+</p>
+<p>hybrid交互</p>
+<p>
+    <input type="button" id="enter" value="获取位置信息" onclick="getGps();"
+    />
+</p>
+
+</body>
+<script>
+
+        function getGps() {
+		 FRWCardApp.getLocation({
+		    success: function (res) {
+		         console.log(res.latitude)
+                 console.log(res.longitude)
+		    },
+		    cancel: function(res) {
+                console.log("cancel")
+		    }
+
+        });
+        }
+
+</script>
+
+</html>
