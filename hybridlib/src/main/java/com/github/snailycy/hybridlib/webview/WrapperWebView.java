@@ -52,9 +52,9 @@ public class WrapperWebView extends FrameLayout implements View.OnClickListener 
             throw new RuntimeException("context should be Activity.");
         }
         View contentView = LayoutInflater.from(context).inflate(R.layout.layout_wrapper_webview, this, true);
-        mWebView = contentView.findViewById(R.id.hybrid_x5_webview);
-        mProgressBar = contentView.findViewById(R.id.progress_bar);
-        mTitleTV = contentView.findViewById(R.id.tv_title);
+        mWebView = (WebView) contentView.findViewById(R.id.hybrid_x5_webview);
+        mProgressBar = (ProgressBar) contentView.findViewById(R.id.progress_bar);
+        mTitleTV = (TextView) contentView.findViewById(R.id.tv_title);
         contentView.findViewById(R.id.btn_close).setOnClickListener(this);
         contentView.findViewById(R.id.btn_refresh).setOnClickListener(this);
     }
