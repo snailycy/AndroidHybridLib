@@ -20,7 +20,7 @@
 
 ```
 	dependencies {
-	        compile 'com.github.snailycy:AndroidHybridLib:1.0.2'
+	        compile 'com.github.snailycy:AndroidHybridLib:1.0.3'
 	}
 
 ```
