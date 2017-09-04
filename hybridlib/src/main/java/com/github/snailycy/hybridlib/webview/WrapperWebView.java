@@ -90,10 +90,12 @@ public class WrapperWebView extends FrameLayout implements View.OnClickListener 
      */
     public void setUserAgent(boolean isWhiteList, String appId, int versionCode, String language) {
         if (isWhiteList) {
+            //  restapp.client.android.5637 2dfire/zh_CN
             WebSettings ws = mWebView.getSettings();
             StringBuilder uaSB = new StringBuilder();
             uaSB.append(ws.getUserAgentString());
             uaSB.append(appId);
+            uaSB.append(".");
             uaSB.append(versionCode);
             uaSB.append(HybridConstant.USER_AGENT_LAN);
             uaSB.append(language);
