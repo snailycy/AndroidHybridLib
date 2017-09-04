@@ -59,6 +59,30 @@ public class MainActivity extends AppCompatActivity {
 
 ```
 
+JSLocationPlugin.java
+
+```
+
+public class JSLocationPlugin extends HybridHandler {
+
+    public void getLocation(String callbackId, JSONObject params) {
+        // do something ...
+
+        JSONObject rspJson = new JSONObject();
+        try {
+            rspJson.put("latitude", 33.33);
+            rspJson.put("longitude", 66.66);
+        } catch (Exception e) {
+            reportFail(callbackId);
+            return;
+        }
+        reportSuccess(callbackId, rspJson.toString());
+    }
+}
+
+```
+
+
 activity_main.xml
 
 ```
