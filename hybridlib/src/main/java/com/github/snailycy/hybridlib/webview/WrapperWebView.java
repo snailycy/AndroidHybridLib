@@ -32,6 +32,7 @@ public class WrapperWebView extends FrameLayout implements View.OnClickListener 
     private WebView mWebView;
     private ProgressBar mProgressBar;
     private TextView mTitleTV;
+    private View mTopNavigationBar;
 
     public WrapperWebView(@NonNull Context context) {
         this(context, null);
@@ -55,6 +56,7 @@ public class WrapperWebView extends FrameLayout implements View.OnClickListener 
         mWebView = (WebView) contentView.findViewById(R.id.hybrid_x5_webview);
         mProgressBar = (ProgressBar) contentView.findViewById(R.id.progress_bar);
         mTitleTV = (TextView) contentView.findViewById(R.id.tv_title);
+        mTopNavigationBar = contentView.findViewById(R.id.rl_top_navigation_bar);
         contentView.findViewById(R.id.btn_close).setOnClickListener(this);
         contentView.findViewById(R.id.btn_refresh).setOnClickListener(this);
     }
@@ -134,6 +136,15 @@ public class WrapperWebView extends FrameLayout implements View.OnClickListener 
 
     public ProgressBar getProgressBar() {
         return mProgressBar;
+    }
+
+    /**
+     * 是否显示顶部导航栏，默认显示
+     *
+     * @param isShow
+     */
+    public void showTopNavigationBar(boolean isShow) {
+        mTopNavigationBar.setVisibility(isShow ? VISIBLE : GONE);
     }
 
     /**
