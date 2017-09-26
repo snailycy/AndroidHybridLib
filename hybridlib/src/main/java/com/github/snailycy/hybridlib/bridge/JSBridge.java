@@ -83,6 +83,7 @@ public class JSBridge {
                     if (jsPlugin != null) {
                         jsPlugin.setCallbackId(callbackId);
                         jsPlugin.setRequestParams(params);
+                        jsPlugin.setJSBridge(JSBridge.this);
                         jsPlugin.jsCallNative(callbackId, params);
                     } else {
                         callbackJS(callbackId, JSCallbackType.FAIL, null);

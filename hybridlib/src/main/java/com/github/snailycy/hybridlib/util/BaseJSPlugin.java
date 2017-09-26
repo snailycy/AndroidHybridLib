@@ -33,6 +33,18 @@ public abstract class BaseJSPlugin {
         this.mRequestParams = mRequestParams;
     }
 
+    public JSBridge getJSBridge() {
+        return mJSBridge;
+    }
+
+    public String getCallbackId() {
+        return mCallbackId;
+    }
+
+    public String getRequestParams() {
+        return mRequestParams;
+    }
+
     /**
      * 获取WebView
      *
