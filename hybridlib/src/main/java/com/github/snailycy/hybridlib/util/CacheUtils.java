@@ -4,11 +4,11 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Environment;
 import android.text.TextUtils;
+import android.webkit.CookieManager;
+import android.webkit.CookieSyncManager;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.tencent.smtt.sdk.CookieManager;
-import com.tencent.smtt.sdk.CookieSyncManager;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -261,6 +261,16 @@ public class CacheUtils {
             cookieManager.setCookie(url, cookie);
         }
         CookieSyncManager.getInstance().sync();
+
+        // x5
+        com.tencent.smtt.sdk.CookieSyncManager.createInstance(context);
+        com.tencent.smtt.sdk.CookieManager cookieManagerX5 = com.tencent.smtt.sdk.CookieManager.getInstance();
+        cookieManagerX5.setAcceptCookie(true);
+        cookieManagerX5.removeAllCookie();
+        for (String cookie : cookies) {
+            cookieManagerX5.setCookie(url, cookie);
+        }
+        com.tencent.smtt.sdk.CookieSyncManager.getInstance().sync();
     }
 
     /**

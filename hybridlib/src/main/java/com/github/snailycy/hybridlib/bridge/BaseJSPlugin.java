@@ -1,9 +1,7 @@
-package com.github.snailycy.hybridlib.util;
+package com.github.snailycy.hybridlib.bridge;
 
 import android.content.Context;
 
-import com.github.snailycy.hybridlib.bridge.JSBridge;
-import com.github.snailycy.hybridlib.bridge.JSCallbackType;
 import com.github.snailycy.hybridlib.webview.WrapperWebView;
 
 /**

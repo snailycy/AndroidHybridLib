@@ -4,7 +4,6 @@ import android.os.Build;
 import android.text.TextUtils;
 import android.webkit.JavascriptInterface;
 
-import com.github.snailycy.hybridlib.util.BaseJSPlugin;
 import com.github.snailycy.hybridlib.util.HybridConstant;
 import com.github.snailycy.hybridlib.webview.WrapperWebView;
 
