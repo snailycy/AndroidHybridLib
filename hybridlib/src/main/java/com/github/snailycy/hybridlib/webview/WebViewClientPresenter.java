@@ -57,7 +57,8 @@ public class WebViewClientPresenter {
             if (uri.getScheme().equals(HybridConstant.HYBRID_FIREWAITER_SCHEME)) {
                 Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                mContext.startActivity(intent);
+                if (mContext instanceof Activity)
+                    ((Activity) mContext).startActivity(intent);
                 return true;
             }
         }
@@ -200,8 +201,13 @@ public class WebViewClientPresenter {
                 // 重新登录
                 Intent intent = new Intent();
                 intent.setAction("android.intent.action.LOGIN");
-                mContext.startActivity(intent);
-                ((Activity) mContext).finish();
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                intent.putExtra("___PATH___", "LoginFragment");
+                if (mContext instanceof Activity) {
+                    Activity activity = (Activity) this.mContext;
+                    activity.startActivity(intent);
+                    activity.finish();
+                }
                 return null;
             }
             webResourceResponse = new WebResourceResponse(htmlMimeType, htmlEncoding, CacheUtils.getInputStream(outputStream));
