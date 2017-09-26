@@ -10,6 +10,8 @@ import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.ViewParent;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -78,7 +80,7 @@ public class WrapperWebView extends FrameLayout implements View.OnClickListener 
             ws.setAllowUniversalAccessFromFileURLs(true);
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            WebView.setWebContentsDebuggingEnabled(true);
+            mWebView.setWebContentsDebuggingEnabled(true);
         }
     }
 
@@ -223,6 +225,18 @@ public class WrapperWebView extends FrameLayout implements View.OnClickListener 
     }
 
     public void destroy() {
-        mWebView.destroy();
+        if (mWebView != null) {
+            ViewParent parent = mWebView.getParent();
+            if (parent != null) {
+                ((ViewGroup) parent).removeView(mWebView);
+            }
+            mWebView.removeAllViews();
+            mWebView.destroy();
+            mWebView = null;
+        }
+    }
+
+    public void loadDataWithBaseURL(String baseUrl, String data, String mimeType, String encoding, String historyUrl) {
+        mWebView.loadDataWithBaseURL(baseUrl, data, mimeType, encoding, historyUrl);
     }
 }

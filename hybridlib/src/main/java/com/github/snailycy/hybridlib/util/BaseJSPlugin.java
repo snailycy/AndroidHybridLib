@@ -7,20 +7,30 @@ import com.github.snailycy.hybridlib.bridge.JSCallbackType;
 import com.github.snailycy.hybridlib.webview.WrapperWebView;
 
 /**
- * 所有jsApi应继承该类
+ * 所有jsPlugin应继承该类
  *
  * @author snailycy
  */
 
-public class HybridHandler {
+public abstract class BaseJSPlugin {
 
     private JSBridge mJSBridge;
+    private String mCallbackId;
+    private String mRequestParams;
 
-    public HybridHandler() {
+    public BaseJSPlugin() {
     }
 
     public void setJSBridge(JSBridge jsBridge) {
         this.mJSBridge = jsBridge;
+    }
+
+    public void setCallbackId(String mCallbackId) {
+        this.mCallbackId = mCallbackId;
+    }
+
+    public void setRequestParams(String mRequestParams) {
+        this.mRequestParams = mRequestParams;
     }
 
     /**
@@ -123,4 +133,12 @@ public class HybridHandler {
     public void reportCompletion(String callbackId, String params) {
         mJSBridge.callbackJS(callbackId, JSCallbackType.COMPLETION, params);
     }
+
+    /**
+     * 所有子类在此实现js调native业务逻辑
+     *
+     * @param callbackId
+     * @param requestParams
+     */
+    public abstract void jsCallNative(String callbackId, String requestParams);
 }

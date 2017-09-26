@@ -45,4 +45,5 @@ public class X5WebViewClient extends WebViewClient {
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
         mWebViewClientPresenter.onPageStarted();
     }
+
 }

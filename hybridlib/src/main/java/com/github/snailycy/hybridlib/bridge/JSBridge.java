@@ -4,13 +4,10 @@ import android.os.Build;
 import android.text.TextUtils;
 import android.webkit.JavascriptInterface;
 
+import com.github.snailycy.hybridlib.util.BaseJSPlugin;
 import com.github.snailycy.hybridlib.util.HybridConstant;
 import com.github.snailycy.hybridlib.webview.WrapperWebView;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.lang.reflect.Method;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -20,9 +17,9 @@ import java.util.Map;
 
 public class JSBridge {
     /**
-     * jsApi容器，key：js调用的方法名 value：相应的jsApi字节码
+     * jsPlugin容器，key：js调用的方法名 value：相应的jsPlugin
      */
-    private Map<String, Class> jsApiMap;
+    private Map<String, BaseJSPlugin> jsApiMap;
     private WrapperWebView mWebView;
 
     public JSBridge(WrapperWebView wrapperWebView) {
@@ -40,20 +37,33 @@ public class JSBridge {
     }
 
     /**
-     * 注册jsapi，所有hybrid交互必须注册jsapi
+     * 注册jsPlugin，所有hybrid交互必须先注册jsPlugin
      *
      * @param jsFunction
-     * @param javaCls
+     * @param jsPlugin
      */
-    public void registerJSApi(String jsFunction, Class javaCls) {
+    public void registerJSPlugin(String jsFunction, BaseJSPlugin jsPlugin) {
         if (jsApiMap == null) {
             jsApiMap = new LinkedHashMap<>();
         }
-        if (!TextUtils.isEmpty(jsFunction) && javaCls != null) {
-            jsApiMap.put(jsFunction, javaCls);
+        if (!TextUtils.isEmpty(jsFunction) && jsPlugin != null) {
+            jsApiMap.put(jsFunction, jsPlugin);
         } else {
-            throw new UnsupportedOperationException("jsFunction or javaCls is not allowed to be empty.");
+            throw new UnsupportedOperationException("jsFunction or jsPlugin is not allowed to be empty.");
         }
+    }
+
+    /**
+     * 获取jsPlugin
+     *
+     * @param jsFunction
+     * @return
+     */
+    public BaseJSPlugin getJSPlugin(String jsFunction) {
+        if (jsApiMap == null) {
+            return jsApiMap.get(jsFunction);
+        }
+        return null;
     }
 
     /**
@@ -68,24 +78,12 @@ public class JSBridge {
         mWebView.post(new Runnable() {
             @Override
             public void run() {
-                Class cls = jsApiMap.get(functionName);
+                BaseJSPlugin jsPlugin = jsApiMap.get(functionName);
                 try {
-                    if (cls != null) {
-                        Object instance = cls.newInstance();
-                        // call setJSBridge
-                        Method setJSBridgeMethod = cls.getSuperclass().getDeclaredMethod("setJSBridge", JSBridge.class);
-                        setJSBridgeMethod.invoke(instance, JSBridge.this);
-
-                        // call jsApi
-                        Method jsApiMethod = cls.getDeclaredMethod(functionName, String.class,
-                                JSONObject.class);
-                        JSONObject requestParams;
-                        try {
-                            requestParams = new JSONObject(params);
-                        } catch (JSONException e) {
-                            requestParams = new JSONObject();
-                        }
-                        jsApiMethod.invoke(instance, callbackId, requestParams);
+                    if (jsPlugin != null) {
+                        jsPlugin.setCallbackId(callbackId);
+                        jsPlugin.setRequestParams(params);
+                        jsPlugin.jsCallNative(callbackId, params);
                     } else {
                         callbackJS(callbackId, JSCallbackType.FAIL, null);
                     }
