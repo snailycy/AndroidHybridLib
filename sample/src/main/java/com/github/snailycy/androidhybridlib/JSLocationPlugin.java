@@ -1,6 +1,6 @@
 package com.github.snailycy.androidhybridlib;
 
-import com.github.snailycy.hybridlib.util.HybridHandler;
+import com.github.snailycy.hybridlib.bridge.BaseJSPlugin;
 
 import org.json.JSONObject;
 
@@ -10,9 +10,10 @@ import org.json.JSONObject;
  * @author snailycy
  */
 
-public class JSLocationPlugin extends HybridHandler {
+public class JSLocationPlugin extends BaseJSPlugin {
 
-    public void getLocation(String callbackId, JSONObject params) {
+    @Override
+    public void jsCallNative(String callbackId, String requestParams) {
         // do something ...
 
         JSONObject rspJson = new JSONObject();
