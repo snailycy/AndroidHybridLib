@@ -4,8 +4,6 @@ import android.content.Context;
 import android.net.Uri;
 import android.os.Environment;
 import android.text.TextUtils;
-import android.webkit.CookieManager;
-import android.webkit.CookieSyncManager;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -253,23 +251,27 @@ public class CacheUtils {
         if (cookies == null) {
             return;
         }
-        CookieSyncManager.createInstance(context);
-        CookieManager cookieManager = CookieManager.getInstance();
+        // chrome
+        android.webkit.CookieManager cookieManager = android.webkit.CookieManager.getInstance();
         cookieManager.setAcceptCookie(true);
-        cookieManager.removeAllCookie();
         for (String cookie : cookies) {
             cookieManager.setCookie(url, cookie);
         }
-        CookieSyncManager.getInstance().sync();
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            cookieManager.flush();
+        } else {
+            android.webkit.CookieSyncManager.createInstance(context);
+            android.webkit.CookieSyncManager.getInstance().sync();
+        }
 
         // x5
-        com.tencent.smtt.sdk.CookieSyncManager.createInstance(context);
         com.tencent.smtt.sdk.CookieManager cookieManagerX5 = com.tencent.smtt.sdk.CookieManager.getInstance();
         cookieManagerX5.setAcceptCookie(true);
-        cookieManagerX5.removeAllCookie();
         for (String cookie : cookies) {
             cookieManagerX5.setCookie(url, cookie);
         }
+        cookieManagerX5.flush();
+        com.tencent.smtt.sdk.CookieSyncManager.createInstance(context);
         com.tencent.smtt.sdk.CookieSyncManager.getInstance().sync();
     }
 
