@@ -1,29 +1,79 @@
 <html>
-<head>
-    <meta content="text/html; charset=utf-8" http-equiv="content-type">
-    <script src="FRWCardApp.js"></script>
-    <title>
-        hybrid交互
-    </title>
-</head>
+    <head>
+        <meta content="text/html; charset=utf-8" http-equiv="content-type">
+<!--        <script src="https://jscdn.2dfire.com/file/js/FRWCardApp.js"></script>-->
+        <script src='FRWCardApp.js' ></script>
+        <title>
+            FRWCardApp
+        </title>
+    </head>
+    
+    <body>
+        <p>
+            <xmp id="show">
+            </xmp>
+        </p>
+        <p>
+            <xmp id="init">
+            </xmp>
+        </p>
+        <p>
+            <input type="button" id="enter" value="获取位置信息" onclick="getGps();"
+            />
+        </p>
+        <p>
+            <input type="button" id="enter1" value="获取缓存数据(同步)" onclick="getMemoryCache();" />
+        </p>
+        <p>
+            <input type="button" id="enter2" value="选择图片" onclick="pickImage();" />
+        </p>
+        <p>
+            <input type="button" id="enter3" value="测试插件函数" onclick="pluginTest();" />
+        </p>
+        <p>
+            <input type="button" id="enter4" value="测试对象插件函数" onclick="objPluginTest();" />
+        </p>
 
-<body>
-<p>
-    <xmp id="show">
-    </xmp>
-</p>
-<p>
-    <xmp id="init">
-    </xmp>
-</p>
-<p>hybrid交互</p>
-<p>
-    <input type="button" id="enter" value="获取位置信息" onclick="getGps();"
-    />
-</p>
 
-</body>
-<script>
+    </body>
+    <script>
+
+        function getMemoryCache() {
+            var cacheData = FRWCardApp.getMemoryCache("aaaa");
+            alert(cacheData);
+        }
+
+        function objPluginTest() {
+            FRWCardApp.getPageImageDetailList({
+                  success: function(res) {
+                      console.log(res);
+                  }
+			})
+        }
+    
+        function pluginTest() {
+            FRWCardApp.getPageImageDetailList({
+                  success: function(res) {
+                      console.log(res);
+                  }
+            })
+        }
+    
+        
+        function pickImage() {
+            FRWCardApp.chooseImage({
+		    count: 1,
+		    sizeType: ['original', 'compressed'],
+		    sourceType: ['album', 'camera'],
+		    success: function (res) {
+		         console.log(res[0].base64)
+
+		    },
+            cancel:function (res) {
+                console.log(res);
+            }
+		});
+        }
 
         function getGps() {
 		 FRWCardApp.getLocation({
@@ -37,7 +87,6 @@
 
         });
         }
-
-</script>
+    </script>
 
 </html>

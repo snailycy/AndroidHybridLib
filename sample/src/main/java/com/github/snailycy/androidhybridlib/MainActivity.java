@@ -27,6 +27,7 @@ public class MainActivity extends AppCompatActivity {
         // 2.注册jsApi
         JSBridge jsBridge = new JSBridge(webView);
         jsBridge.registerJSPlugin("getLocation", new JSLocationPlugin());
+        jsBridge.registerJSPlugin("getMemoryCache", new JSGetCachePlugin());
 
         // 3.load html
         webView.loadUrl("file:///android_asset/FRWCardApp.html");

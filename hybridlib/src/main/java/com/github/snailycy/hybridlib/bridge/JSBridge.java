@@ -63,7 +63,7 @@ public class JSBridge {
     }
 
     /**
-     * 分发js请求
+     * 分发js请求，异步
      *
      * @param functionName
      * @param callbackId
@@ -129,7 +129,7 @@ public class JSBridge {
     }
 
     /**
-     * js call android接口：各业务统一从该入口分发
+     * js call android接口，异步：各业务统一从该入口分发
      *
      * @param functionName
      * @param callbackId
@@ -139,6 +139,36 @@ public class JSBridge {
     public void messageSend(String functionName, final String callbackId, String params) {
         //分发js请求
         dispatchJSRequest(functionName, callbackId, params);
+    }
+
+    /**
+     * js call android接口，同步
+     *
+     * @param functionName
+     * @param params
+     */
+    @JavascriptInterface
+    public String syndMessageSend(String functionName, String params) {
+        //分发js请求
+        return dispatchJSRequest(functionName, params);
+    }
+
+    /**
+     * 分发同步请求
+     *
+     * @param functionName
+     * @param params
+     * @return
+     */
+    private String dispatchJSRequest(String functionName, String params) {
+        BaseJSPlugin jsPlugin = jsPluginMap.get(functionName);
+        if (jsPlugin != null && (jsPlugin instanceof BaseJSPluginSync)) {
+            BaseJSPluginSync jsPluginSync = (BaseJSPluginSync) jsPlugin;
+            jsPluginSync.setRequestParams(params);
+            jsPluginSync.setJSBridge(JSBridge.this);
+            return jsPluginSync.jsCallNative(params);
+        }
+        return null;
     }
 
     /**

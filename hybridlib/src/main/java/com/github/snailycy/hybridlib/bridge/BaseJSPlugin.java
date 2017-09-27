@@ -145,10 +145,11 @@ public abstract class BaseJSPlugin {
     }
 
     /**
-     * 所有子类在此实现js调native业务逻辑
+     * 所有子类在此实现js调native业务逻辑，异步
      *
      * @param callbackId
      * @param requestParams
      */
     public abstract void jsCallNative(String callbackId, String requestParams);
+
 }
