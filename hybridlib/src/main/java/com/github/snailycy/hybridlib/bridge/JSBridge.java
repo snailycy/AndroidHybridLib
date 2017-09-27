@@ -18,7 +18,7 @@ public class JSBridge {
     /**
      * jsPlugin容器，key：js调用的方法名 value：相应的jsPlugin
      */
-    private Map<String, BaseJSPlugin> jsApiMap;
+    private Map<String, BaseJSPlugin> jsPluginMap;
     private WrapperWebView mWebView;
 
     public JSBridge(WrapperWebView wrapperWebView) {
@@ -42,11 +42,11 @@ public class JSBridge {
      * @param jsPlugin
      */
     public void registerJSPlugin(String jsFunction, BaseJSPlugin jsPlugin) {
-        if (jsApiMap == null) {
-            jsApiMap = new LinkedHashMap<>();
+        if (jsPluginMap == null) {
+            jsPluginMap = new LinkedHashMap<>();
         }
         if (!TextUtils.isEmpty(jsFunction) && jsPlugin != null) {
-            jsApiMap.put(jsFunction, jsPlugin);
+            jsPluginMap.put(jsFunction, jsPlugin);
         } else {
             throw new UnsupportedOperationException("jsFunction or jsPlugin is not allowed to be empty.");
         }
@@ -59,10 +59,7 @@ public class JSBridge {
      * @return
      */
     public BaseJSPlugin getJSPlugin(String jsFunction) {
-        if (jsApiMap == null) {
-            return jsApiMap.get(jsFunction);
-        }
-        return null;
+        return jsPluginMap == null ? null : jsPluginMap.get(jsFunction);
     }
 
     /**
@@ -77,7 +74,7 @@ public class JSBridge {
         mWebView.post(new Runnable() {
             @Override
             public void run() {
-                BaseJSPlugin jsPlugin = jsApiMap.get(functionName);
+                BaseJSPlugin jsPlugin = jsPluginMap.get(functionName);
                 try {
                     if (jsPlugin != null) {
                         jsPlugin.setCallbackId(callbackId);
