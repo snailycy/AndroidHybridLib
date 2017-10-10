@@ -20,11 +20,12 @@ public class X5WebViewClient extends WebViewClient {
     private IWebViewClient mBizWebViewClient;
 
     public X5WebViewClient(WrapperWebView webView) {
-        mWebViewClientPresenter = new WebViewClientPresenter(webView, mBizWebViewClient);
+        mWebViewClientPresenter = new WebViewClientPresenter(webView);
     }
 
     public void setBizWebViewClient(IWebViewClient bizWebViewClient) {
         this.mBizWebViewClient = bizWebViewClient;
+        mWebViewClientPresenter.setBizWebViewClient(bizWebViewClient);
     }
 
     public void setIsWhiteList(boolean isWhiteList) {

@@ -39,9 +39,11 @@ public class WebViewClientPresenter {
     private ExecutorService mExecutorService = Executors.newFixedThreadPool(3);
     private IWebViewClient mBizWebViewClient;
 
-
-    public WebViewClientPresenter(WrapperWebView webView, IWebViewClient bizWebViewClient) {
+    public WebViewClientPresenter(WrapperWebView webView) {
         this.mProgressBar = webView.getProgressBar();
+    }
+
+    public void setBizWebViewClient(IWebViewClient bizWebViewClient) {
         this.mBizWebViewClient = bizWebViewClient;
     }
 
