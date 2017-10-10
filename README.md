@@ -1,7 +1,9 @@
 # AndroidHybridLib
 
 JSBridge提供了Hybrid同步和异步调用。
+
 实现WebView复用池，减少WebView初始化消耗的时间。
+
 集成腾讯x5内核，crash率低于0.06%，X5内核基于统一Blink内核，无缝隐藏系统差异，在所有Android手机平台表现一致。
 
 
