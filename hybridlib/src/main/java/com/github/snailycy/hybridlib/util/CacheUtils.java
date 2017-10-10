@@ -29,7 +29,7 @@ import java.util.concurrent.ExecutorService;
 
 public class CacheUtils {
 
-    private static final String DIR = ".cardApp";
+    private static final String DIR = ".ycyApp";
 
     private static final String DIR_H5 = "h5";
 

@@ -2,6 +2,7 @@ package com.github.snailycy.hybridlib.webview;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.MutableContextWrapper;
 import android.os.Build;
 import android.support.annotation.AttrRes;
 import android.support.annotation.NonNull;
@@ -19,10 +20,8 @@ import android.widget.TextView;
 import com.github.snailycy.hybridlib.R;
 import com.github.snailycy.hybridlib.util.HybridConstant;
 import com.tencent.smtt.sdk.ValueCallback;
-import com.tencent.smtt.sdk.WebChromeClient;
 import com.tencent.smtt.sdk.WebSettings;
 import com.tencent.smtt.sdk.WebView;
-import com.tencent.smtt.sdk.WebViewClient;
 
 /**
  * 包装WebView，带进度条
@@ -35,6 +34,11 @@ public class WrapperWebView extends FrameLayout implements View.OnClickListener 
     private ProgressBar mProgressBar;
     private TextView mTitleTV;
     private View mTopNavigationBar;
+    /**
+     * 是否为白名单
+     */
+    private boolean mIsWhiteList;
+    private X5WebViewClient mX5WebViewClient;
 
     public WrapperWebView(@NonNull Context context) {
         this(context, null);
@@ -48,14 +52,29 @@ public class WrapperWebView extends FrameLayout implements View.OnClickListener 
         super(context, attrs, defStyleAttr);
         initWrapperWebView(context);
         initWebViewSettings();
+        initWebViewClient();
+    }
+
+    public void setIsWhiteList(boolean isWhiteList) {
+        this.mIsWhiteList = isWhiteList;
+        mX5WebViewClient.setIsWhiteList(mIsWhiteList);
+    }
+
+    private void initWebViewClient() {
+        X5WebChromeClient x5WebChromeClient = new X5WebChromeClient(this);
+        mWebView.setWebChromeClient(x5WebChromeClient);
+        mX5WebViewClient = new X5WebViewClient(this);
+        mWebView.setWebViewClient(mX5WebViewClient);
     }
 
     private void initWrapperWebView(Context context) {
-        if (!(context instanceof Activity)) {
-            throw new RuntimeException("context should be Activity.");
-        }
         View contentView = LayoutInflater.from(context).inflate(R.layout.layout_wrapper_webview, this, true);
-        mWebView = (WebView) contentView.findViewById(R.id.hybrid_x5_webview);
+        mWebView = new WebView(context);
+        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT);
+        mWebView.setLayoutParams(layoutParams);
+        FrameLayout webviewContainer = (FrameLayout) contentView.findViewById(R.id.fl_webview_container);
+        webviewContainer.addView(mWebView, 0);
         mProgressBar = (ProgressBar) contentView.findViewById(R.id.progress_bar);
         mTitleTV = (TextView) contentView.findViewById(R.id.tv_title);
         mTopNavigationBar = contentView.findViewById(R.id.rl_top_navigation_bar);
@@ -67,6 +86,7 @@ public class WrapperWebView extends FrameLayout implements View.OnClickListener 
         WebSettings ws = mWebView.getSettings();
         ws.setDefaultTextEncodingName("utf-8");
         ws.setJavaScriptEnabled(true);
+        ws.setPluginsEnabled(true);
         ws.setDomStorageEnabled(true);
         ws.setRenderPriority(com.tencent.smtt.sdk.WebSettings.RenderPriority.HIGH);
         ws.setAllowFileAccess(true);
@@ -75,6 +95,7 @@ public class WrapperWebView extends FrameLayout implements View.OnClickListener 
         ws.setCacheMode(com.tencent.smtt.sdk.WebSettings.LOAD_NO_CACHE);
         ws.setSaveFormData(true);
         ws.setJavaScriptCanOpenWindowsAutomatically(true);
+        ws.setLoadsImagesAutomatically(true);
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
             ws.setAllowFileAccessFromFileURLs(true);
             ws.setAllowUniversalAccessFromFileURLs(true);
@@ -87,14 +108,12 @@ public class WrapperWebView extends FrameLayout implements View.OnClickListener 
     /**
      * 设置UserAgent
      *
-     * @param isWhiteList
      * @param appId
      * @param versionCode
      * @param language
      */
-    public void setUserAgent(boolean isWhiteList, String appId, int versionCode, String language) {
-        if (isWhiteList) {
-            //  restapp.client.android.5637 2dfire/zh_CN
+    public void setUserAgent(String appId, int versionCode, String language) {
+        if (mIsWhiteList) {
             WebSettings ws = mWebView.getSettings();
             StringBuilder uaSB = new StringBuilder();
             uaSB.append(ws.getUserAgentString());
@@ -110,7 +129,14 @@ public class WrapperWebView extends FrameLayout implements View.OnClickListener 
     @Override
     public void onClick(View view) {
         if (view.getId() == R.id.btn_close) {
-            ((Activity) getContext()).finish();
+            if (getContext() instanceof MutableContextWrapper) {
+                Context baseContext = ((MutableContextWrapper) getContext()).getBaseContext();
+                if (baseContext instanceof Activity) {
+                    ((Activity) baseContext).finish();
+                }
+            } else if (getContext() instanceof Activity) {
+                ((Activity) getContext()).finish();
+            }
         } else if (view.getId() == R.id.btn_refresh) {
             reload();
         }
@@ -160,12 +186,8 @@ public class WrapperWebView extends FrameLayout implements View.OnClickListener 
         }
     }
 
-    public void setWebViewClient(WebViewClient webViewClient) {
-        mWebView.setWebViewClient(webViewClient);
-    }
-
-    public void setWebChromeClient(WebChromeClient webChromeClient) {
-        mWebView.setWebChromeClient(webChromeClient);
+    public void setWebViewClient(IWebViewClient webViewClient) {
+        mX5WebViewClient.setBizWebViewClient(webViewClient);
     }
 
     public boolean canGoBack() {
@@ -224,19 +246,52 @@ public class WrapperWebView extends FrameLayout implements View.OnClickListener 
         return mWebView.getOriginalUrl();
     }
 
-    public void destroy() {
-        if (mWebView != null) {
-            ViewParent parent = mWebView.getParent();
-            if (parent != null) {
-                ((ViewGroup) parent).removeView(mWebView);
-            }
-            mWebView.removeAllViews();
-            mWebView.destroy();
-            mWebView = null;
-        }
-    }
-
     public void loadDataWithBaseURL(String baseUrl, String data, String mimeType, String encoding, String historyUrl) {
         mWebView.loadDataWithBaseURL(baseUrl, data, mimeType, encoding, historyUrl);
     }
+
+    /**
+     * 绑定新的Context
+     *
+     * @param context
+     */
+    public void bindNewContext(Context context) {
+        if (getContext() instanceof MutableContextWrapper) {
+            ((MutableContextWrapper) getContext()).setBaseContext(context);
+        }
+    }
+
+    /**
+     * 重置WebView
+     */
+    public void reset() {
+        if (mWebView != null) {
+            mWebView.stopLoading();
+            mWebView.clearCache(true);
+            mWebView.clearHistory();
+        }
+    }
+
+    /**
+     * 销毁WebView
+     */
+    public void destroy() {
+        try {
+            if (mWebView != null) {
+                mWebView.stopLoading();
+                mWebView.clearCache(true);
+                mWebView.clearHistory();
+                ViewParent parent = mWebView.getParent();
+                if (parent != null) {
+                    ((ViewGroup) parent).removeView(mWebView);
+                }
+                mWebView.removeAllViews();
+                mWebView.destroy();
+                mWebView = null;
+            }
+        } catch (Exception e) {
+            // ignore
+        }
+    }
+
 }

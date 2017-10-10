@@ -49,14 +49,10 @@
     </RelativeLayout>
 
     <FrameLayout
+        android:id="@+id/fl_webview_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
-
-        <com.tencent.smtt.sdk.WebView
-            android:id="@+id/hybrid_x5_webview"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
 
         <ProgressBar
             android:id="@+id/progress_bar"

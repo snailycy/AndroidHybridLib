@@ -104,7 +104,7 @@ public class JSBridge {
         }
 
         final StringBuilder jsSB = new StringBuilder();
-        jsSB.append("FRWCardApp.callBackFromNative('");
+        jsSB.append("YCYApp.callBackFromNative('");
         jsSB.append(callbackId);
         jsSB.append("','");
         jsSB.append(callbackFunctionName.getValue());

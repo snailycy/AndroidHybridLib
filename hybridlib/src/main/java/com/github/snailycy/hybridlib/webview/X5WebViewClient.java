@@ -14,15 +14,27 @@ import com.tencent.smtt.sdk.WebViewClient;
 public class X5WebViewClient extends WebViewClient {
 
     private WebViewClientPresenter mWebViewClientPresenter;
+    /**
+     * 预留处理具体业务的WebViewClient
+     */
+    private IWebViewClient mBizWebViewClient;
 
-    public X5WebViewClient(WrapperWebView webView, boolean isWhiteList) {
-        mWebViewClientPresenter = new WebViewClientPresenter(webView, isWhiteList);
+    public X5WebViewClient(WrapperWebView webView) {
+        mWebViewClientPresenter = new WebViewClientPresenter(webView, mBizWebViewClient);
+    }
+
+    public void setBizWebViewClient(IWebViewClient bizWebViewClient) {
+        this.mBizWebViewClient = bizWebViewClient;
+    }
+
+    public void setIsWhiteList(boolean isWhiteList) {
+        this.mWebViewClientPresenter.setIsWhiteList(isWhiteList);
     }
 
     @Override
     public boolean shouldOverrideUrlLoading(WebView view, String url) {
-        if (mWebViewClientPresenter.shouldOverrideUrlLoading(url)) {
-            return true;
+        if (mBizWebViewClient != null) {
+            return mBizWebViewClient.shouldOverrideUrlLoading(view, url);
         }
         return super.shouldOverrideUrlLoading(view, url);
     }

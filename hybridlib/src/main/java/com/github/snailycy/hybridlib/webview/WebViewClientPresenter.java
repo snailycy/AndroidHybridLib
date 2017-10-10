@@ -1,15 +1,11 @@
 package com.github.snailycy.hybridlib.webview;
 
-import android.app.Activity;
-import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.text.TextUtils;
 import android.view.View;
 import android.widget.ProgressBar;
 
 import com.github.snailycy.hybridlib.util.CacheUtils;
-import com.github.snailycy.hybridlib.util.HybridConstant;
 import com.google.gson.JsonObject;
 import com.tencent.smtt.export.external.interfaces.WebResourceResponse;
 
@@ -35,34 +31,22 @@ import java.util.concurrent.Executors;
 
 public class WebViewClientPresenter {
 
-    private Context mContext;
     private ProgressBar mProgressBar;
     /**
-     * 是否是公司地址
+     * 是否是白名单
      */
     private boolean mIsWhiteList;
     private ExecutorService mExecutorService = Executors.newFixedThreadPool(3);
+    private IWebViewClient mBizWebViewClient;
 
 
-    public WebViewClientPresenter(WrapperWebView webView, boolean isWhiteList) {
-        this.mContext = webView.getContext();
+    public WebViewClientPresenter(WrapperWebView webView, IWebViewClient bizWebViewClient) {
         this.mProgressBar = webView.getProgressBar();
-        this.mIsWhiteList = isWhiteList;
+        this.mBizWebViewClient = bizWebViewClient;
     }
 
-    public boolean shouldOverrideUrlLoading(String url) {
-        // 拦截支付
-        if (!TextUtils.isEmpty(url)) {
-            Uri uri = Uri.parse(url);
-            if (uri.getScheme().equals(HybridConstant.HYBRID_FIREWAITER_SCHEME)) {
-                Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                if (mContext instanceof Activity)
-                    ((Activity) mContext).startActivity(intent);
-                return true;
-            }
-        }
-        return false;
+    public void setIsWhiteList(boolean isWhiteList) {
+        this.mIsWhiteList = isWhiteList;
     }
 
     public void onPageStarted() {
@@ -189,27 +173,7 @@ public class WebViewClientPresenter {
             //请求数据接口需判断返回code是否为-1
             ByteArrayOutputStream outputStream = CacheUtils.inputStreamCache(inputStream);
             JsonObject result = CacheUtils.getJsonObjectFromOutputStream(outputStream);
-            int code = 0;
-            if ((result != null && result.get("code") != null && !result.get("code").isJsonNull())) {
-                try {
-                    code = result.get("code").getAsInt();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-            if (code == -1) {
-                // 重新登录
-                Intent intent = new Intent();
-                intent.setAction("android.intent.action.LOGIN");
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent.putExtra("___PATH___", "LoginFragment");
-                if (mContext instanceof Activity) {
-                    Activity activity = (Activity) this.mContext;
-                    activity.startActivity(intent);
-                    activity.finish();
-                }
-                return null;
-            }
+            if (mBizWebViewClient.interceptRequestNetworkResult(result)) return null;
             webResourceResponse = new WebResourceResponse(htmlMimeType, htmlEncoding, CacheUtils.getInputStream(outputStream));
         } else {
             webResourceResponse = new WebResourceResponse(htmlMimeType, htmlEncoding, inputStream);

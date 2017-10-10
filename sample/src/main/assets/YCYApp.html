@@ -1,0 +1,48 @@
+<html>
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="content-type">
+    <script src='YCYApp.js'></script>
+    <title>
+        Hybrid接口测试
+    </title>
+</head>
+
+<body>
+<p>
+    <xmp id="show">
+    </xmp>
+</p>
+<p>
+    <xmp id="init">
+    </xmp>
+</p>
+<p>
+    <input type="button" id="enter" value="获取位置信息" onclick="getGps();"
+    />
+</p>
+<p>
+    <input type="button" id="enter1" value="获取缓存数据(同步)" onclick="getMemoryCache();"/>
+</p>
+</body>
+<script>
+
+        function getMemoryCache() {
+            var cacheData = YCYApp.getMemoryCache("aaaa");
+            alert(cacheData);
+        }
+
+        function getGps() {
+		 YCYApp.getLocation({
+		    success: function (res) {
+		         alert(res.latitude+" , "+res.longitude)
+		    },
+		    cancel: function(res) {
+                alert("cancel")
+		    }
+
+        });
+        }
+
+</script>
+
+</html>

@@ -5,8 +5,8 @@
     android:layout_height="match_parent"
     tools:context="com.github.snailycy.androidhybridlib.MainActivity">
 
-    <com.github.snailycy.hybridlib.webview.WrapperWebView
-        android:id="@+id/webview"
+    <FrameLayout
+        android:id="@+id/webview_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 

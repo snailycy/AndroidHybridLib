@@ -2,13 +2,15 @@ package com.github.snailycy.androidhybridlib;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.widget.FrameLayout;
 
 import com.github.snailycy.hybridlib.bridge.JSBridge;
+import com.github.snailycy.hybridlib.webview.WebViewPool;
 import com.github.snailycy.hybridlib.webview.WrapperWebView;
-import com.github.snailycy.hybridlib.webview.X5WebChromeClient;
-import com.github.snailycy.hybridlib.webview.X5WebViewClient;
 
 public class MainActivity extends AppCompatActivity {
+
+    private WrapperWebView mWebView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -18,18 +20,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initView() {
-        WrapperWebView webView = (WrapperWebView) findViewById(R.id.webview);
-        // 1.设置ua和WebViewClient,WebChromeClient
-        webView.setUserAgent(true, "cardapp.client.android", 66666, "zh_CN");
-        webView.setWebChromeClient(new X5WebChromeClient(webView));
-        webView.setWebViewClient(new X5WebViewClient(webView, true));
+        FrameLayout webViewContainer = (FrameLayout) findViewById(R.id.webview_container);
 
-        // 2.注册jsApi
-        JSBridge jsBridge = new JSBridge(webView);
+        // 获取webview并绑定新的context
+        mWebView = WebViewPool.getInstance().getWebView();
+        mWebView.bindNewContext(this);
+        webViewContainer.addView(mWebView);
+
+        // 设置isWhiteList，userAgent和webViewClient
+        mWebView.setIsWhiteList(true);
+        mWebView.setUserAgent("ycyapp.client.android", 666, "zh_CN");
+        mWebView.setWebViewClient(new MyWebViewClient(this));
+
+        // 注册jsApi
+        JSBridge jsBridge = new JSBridge(mWebView);
         jsBridge.registerJSPlugin("getLocation", new JSLocationPlugin());
         jsBridge.registerJSPlugin("getMemoryCache", new JSGetCachePlugin());
 
-        // 3.load html
-        webView.loadUrl("file:///android_asset/FRWCardApp.html");
+        // load html
+        mWebView.loadUrl("file:///android_asset/YCYApp.html");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        WebViewPool.getInstance().resetWebView(mWebView);
     }
 }
