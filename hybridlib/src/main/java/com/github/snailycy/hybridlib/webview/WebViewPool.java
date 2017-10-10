@@ -65,7 +65,7 @@ public class WebViewPool {
             webView.setLayoutParams(layoutParams);
         }
         sInUse.add(webView);
-        webView.loadUrl("about:blank");
+        webView.loadUrl("");
         return webView;
     }
 
