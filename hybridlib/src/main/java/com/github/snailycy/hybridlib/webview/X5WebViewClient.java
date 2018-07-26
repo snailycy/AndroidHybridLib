@@ -43,8 +43,7 @@ public class X5WebViewClient extends WebViewClient {
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
         if (null != request) {
-            WebResourceResponse localResource = mWebViewClientPresenter.shouldInterceptRequest(request.getUrl(),
-                    request.getMethod(), request.getRequestHeaders());
+            WebResourceResponse localResource = mWebViewClientPresenter.shouldInterceptRequest(request.getUrl());
             // 不为空，则拦截
             if (null != localResource) {
                 return localResource;

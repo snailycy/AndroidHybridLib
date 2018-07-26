@@ -1,6 +1,5 @@
 package com.github.snailycy.hybridlib.util;
 
-import android.content.Context;
 import android.net.Uri;
 import android.os.Environment;
 import android.text.TextUtils;
@@ -11,69 +10,34 @@ import com.google.gson.JsonParser;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
-import java.util.concurrent.ExecutorService;
 
 /**
  * 缓存相关操作
  */
 
-public class CacheUtils {
+public class HybridCacheUtils {
 
-    private static final String DIR = ".ycyApp";
+    private static String DIR = ".app";
 
-    private static final String DIR_H5 = "h5";
+    public static final String DIR_H5 = "h5";
 
     /**
-     * 获取缓存文件路径，将服务器的路径转为本地缓存路径并check是否存在
+     * 设置缓存路径
+     * dafault '.app'
      *
-     * @param uri 服务器路径
-     * @return 若缓存存在，返回本地路径
+     * @param rootDir
      */
-    public static String getLocalCache(final Uri uri, ExecutorService threadPool) {
-        // 转换成本地路径
-        final String cacheFilePath = convertUriToFilePath(uri);
-        if (TextUtils.isEmpty(cacheFilePath)) {
-            return null;
-        }
-
-        // 判断本地是否存在该文件
-        boolean isExist = checkPathExist(cacheFilePath);
-        if (!isExist) {
-            // 不存在，缓存在本地
-            if (null != threadPool) {
-                try {
-                    threadPool.execute(new Runnable() {
-                        @Override
-                        public void run() {
-                            saveResource(uri, cacheFilePath);
-                        }
-                    });
-                } catch (Exception exception) {
-                    exception.printStackTrace();
-                }
-            }
-            return null;
-        }
-        return cacheFilePath;
+    public static void setCacheRootDir(String rootDir) {
+        DIR = rootDir;
     }
 
-    /**
-     * 截取请求，转化成本地文件夹形式
-     *
-     * @param uri
-     * @return
-     */
-    private static String convertUriToFilePath(Uri uri) {
+    public static String convertUriToFilePath(Uri uri, boolean needQueryParams) {
         if (null == uri || TextUtils.isEmpty(uri.toString())) {
             return null;
         }
@@ -101,84 +65,32 @@ public class CacheUtils {
         if (!TextUtils.isEmpty(path)) {
             filePathSB.append(path);
         }
-
-        // Query信息
-        String query = uri.getQuery();
-        if (!TextUtils.isEmpty(query)) {
-            filePathSB.append(query);
+        if (needQueryParams) {
+            // Query信息
+            String query = uri.getQuery();
+            if (!TextUtils.isEmpty(query)) {
+                filePathSB.append(query);
+            }
         }
-
         // host + path不为空
         if (filePathSB.length() > 0) {
             return filePathSB.toString();
         }
-
         return null;
     }
 
-    public static void saveResource(Uri uri, String cacheFilePath) {
-        if (null == uri || TextUtils.isEmpty(uri.toString()) || TextUtils.isEmpty(cacheFilePath)) {
-            return;
-        }
-        String scheme = uri.getScheme();
-        if (!TextUtils.equals(scheme, "http") && !TextUtils.equals(scheme, "https")) {//不是可以网页链接
-            return;
-        }
+    /**
+     * 网络路径转换成本地路径，默认带query参数
+     *
+     * @param uri
+     * @return
+     */
+    public static String convertUriToFilePath(Uri uri) {
+        return convertUriToFilePath(uri, true);
+    }
 
-        // 本地路径创建文件
-        File file = new File(cacheFilePath);
-        File parentFile = file.getParentFile();
-        if (null != parentFile && !parentFile.exists()) {
-            parentFile.mkdirs();
-        }
-        try {
-            file.createNewFile();
-        } catch (IOException iOException) {
-            iOException.printStackTrace();
-            if (null != file) {
-                file.delete();
-            }
-            return;
-        }
-
-        // 发请求保存资源至SD卡
-        HttpURLConnection urlConnection = null;
-        InputStream inputStream = null;
-        FileOutputStream fileOutputStream = null;
-        try {
-            URL url = new URL(uri.toString());
-            urlConnection = (HttpURLConnection) url.openConnection();
-            inputStream = urlConnection.getInputStream();
-            byte[] buffer = new byte[1024];
-            int bufferLength;
-            fileOutputStream = new FileOutputStream(file);
-            while ((bufferLength = inputStream.read(buffer)) > 0) {
-                fileOutputStream.write(buffer, 0, bufferLength);
-            }
-
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            if (null != urlConnection) {
-                urlConnection.disconnect();
-            }
-            if (null != inputStream) {
-                try {
-                    inputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-            if (null != fileOutputStream) {
-                try {
-                    fileOutputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+    public static void saveResource(Uri uri, String cacheFilePath, OnDownloadListener onDownloadListener) {
+        DownloadFileUtils.download(uri, cacheFilePath, onDownloadListener);
     }
 
     /**
@@ -238,41 +150,6 @@ public class CacheUtils {
             }
         }
         return encoding;
-    }
-
-    /**
-     * 设置cookie
-     *
-     * @param context
-     * @param url
-     * @param cookies
-     */
-    public static void synCookies(Context context, String url, ArrayList<String> cookies) {
-        if (cookies == null) {
-            return;
-        }
-        // chrome
-        android.webkit.CookieManager cookieManager = android.webkit.CookieManager.getInstance();
-        cookieManager.setAcceptCookie(true);
-        for (String cookie : cookies) {
-            cookieManager.setCookie(url, cookie);
-        }
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            cookieManager.flush();
-        } else {
-            android.webkit.CookieSyncManager.createInstance(context);
-            android.webkit.CookieSyncManager.getInstance().sync();
-        }
-
-        // x5
-        com.tencent.smtt.sdk.CookieManager cookieManagerX5 = com.tencent.smtt.sdk.CookieManager.getInstance();
-        cookieManagerX5.setAcceptCookie(true);
-        for (String cookie : cookies) {
-            cookieManagerX5.setCookie(url, cookie);
-        }
-        cookieManagerX5.flush();
-        com.tencent.smtt.sdk.CookieSyncManager.createInstance(context);
-        com.tencent.smtt.sdk.CookieSyncManager.getInstance().sync();
     }
 
     /**
@@ -384,7 +261,7 @@ public class CacheUtils {
      * @param path
      * @return
      */
-    private static boolean checkPathExist(String path) {
+    public static boolean checkPathExist(String path) {
         if (TextUtils.isEmpty(path)) {
             return false;
         }
@@ -406,6 +283,47 @@ public class CacheUtils {
     }
 
     /**
+     * 获取缓存文件，返回字符串文本
+     *
+     * @param path
+     * @return
+     */
+    public static String getCacheFile(String path) {
+        if (TextUtils.isEmpty(path)) {
+            return null;
+        }
+        File file = new File(path);
+        if (null == file) {
+            return null;
+        }
+        if (file.exists()) {
+            // 如果文件存在，且缓存的文件大小为0，说明之前下载失败，删除文件
+            if (file.length() <= 0) {
+                file.delete();
+                return null;
+            }
+            // 读文件
+            FileInputStream fis = null;
+            try {
+                fis = new FileInputStream(file);
+                byte[] buff = new byte[fis.available()];
+                fis.read(buff);
+                return new String(buff, "UTF-8");
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                if (fis != null) {
+                    try {
+                        fis.close();
+                    } catch (Exception e) {
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * 获取SD卡下的缓存目录
      *
      * @return
@@ -422,7 +340,7 @@ public class CacheUtils {
         if (null == cacheDir || !cacheDir.exists()) {
             // 若主缓存目录不存在，创建
             if (null != cacheDir) {
-                boolean mkdirs = cacheDir.mkdirs();
+                cacheDir.mkdirs();
             }
             return null;
         }
@@ -446,5 +364,4 @@ public class CacheUtils {
         String filename = prefix + dateFormat.format(new Date(System.currentTimeMillis())) + suffix;
         return new File(folder, filename);
     }
-
 }

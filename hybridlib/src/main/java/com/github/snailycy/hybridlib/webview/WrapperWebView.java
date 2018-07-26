@@ -105,6 +105,10 @@ public class WrapperWebView extends FrameLayout implements View.OnClickListener 
         }
     }
 
+    public WebView getWebView() {
+        return mWebView;
+    }
+
     /**
      * 设置UserAgent
      *
@@ -180,6 +184,7 @@ public class WrapperWebView extends FrameLayout implements View.OnClickListener 
      * =============== 包装WebView接口 ================
      * ================================================
      */
+
     public void loadUrl(String url) {
         if (!TextUtils.isEmpty(url)) {
             mWebView.loadUrl(url);

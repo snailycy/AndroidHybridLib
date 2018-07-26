@@ -5,22 +5,12 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.ProgressBar;
 
-import com.github.snailycy.hybridlib.util.CacheUtils;
-import com.google.gson.JsonObject;
+import com.github.snailycy.hybridlib.util.HybridCacheUtils;
 import com.tencent.smtt.export.external.interfaces.WebResourceResponse;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -62,137 +52,46 @@ public class WebViewClientPresenter {
      * @param uri 网络URI
      * @return 若需要拦截，返回WebResourceResponse；否则为null
      */
-    public WebResourceResponse shouldInterceptRequest(Uri uri, String requestMethod, Map<String, String> maps) {
+    public WebResourceResponse shouldInterceptRequest(Uri uri) {
         if (null == uri || null == uri.getPath()) {
             return null;
         }
         // 判断请求是以下["css","js","jpg","jpeg","png","gif"]的资源，走本地缓存逻辑
-        if (CacheUtils.mountedSDCard() && CacheUtils.needCache(uri)) {
-            WebResourceResponse webResourceResponse = insteadOfCache(uri, mExecutorService);
+        if (HybridCacheUtils.mountedSDCard() && HybridCacheUtils.needCache(uri)) {
+            WebResourceResponse webResourceResponse = insteadOfCache(uri);
             return webResourceResponse;
-        }
-        if (!TextUtils.isEmpty(requestMethod) && !requestMethod.equalsIgnoreCase("GET")) {
-            // 请求方式GET时，走本地访问(POST或其他方式获取不到请求参数）
-            return null;
-        }
-
-        // 其他请求走本地访问，不缓存
-        WebResourceResponse webResourceResponseNet = requestNetwork(uri, maps);
-        return webResourceResponseNet;
-    }
-
-
-    /**
-     * 首先检查本地缓存有没有该资源，如有替换成本地，如没有缓存资源到本地
-     *
-     * @param uri 需要走缓存逻辑的网络请求URI
-     * @return 若本地有缓存，返回缓存资源；否则返回null
-     */
-    private WebResourceResponse insteadOfCache(Uri uri, ExecutorService threadPool) {
-        if (null == uri) {
-            return null;
-        }
-
-        String localCachePath = CacheUtils.getLocalCache(uri, threadPool);
-        if (!TextUtils.isEmpty(localCachePath)) {
-            // 本地有缓存，直接替换成本地资源
-            try {
-                FileInputStream fileInputStream = new FileInputStream(new File(localCachePath));
-                return getUtf8EncodedWebResourceResponse(uri.getPath(), fileInputStream);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
         }
         return null;
     }
 
-    private WebResourceResponse getUtf8EncodedWebResourceResponse(String localResourcePath, InputStream data) {
-        if (TextUtils.isEmpty(localResourcePath) || null == data) {
-            return null;
-        }
-        String resourceType = CacheUtils.getResourceType(localResourcePath);
-        return new WebResourceResponse(resourceType, "UTF-8", data);
-    }
 
-    private WebResourceResponse requestNetwork(Uri uri, Map<String, String> maps) {
-        URL url = null;
-        try {
-            url = new URL(uri.toString());
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
-        if (null == url) {
-            return null;
-        }
-        String scheme = uri.getScheme();
-        if (!TextUtils.equals(scheme, "http") && !TextUtils.equals(scheme, "https")) {//不是可以跳转的网页
+    /**
+     * 检查是否有缓存，如有则读取本地缓存，否则缓存资源到本地
+     *
+     * @param uri 需要走缓存逻辑的网络请求URI
+     * @return 若本地有缓存，返回缓存资源；否则返回null
+     */
+    private WebResourceResponse insteadOfCache(final Uri uri) {
+        if (null == uri) {
             return null;
         }
 
-        HttpURLConnection connection = null;
-        try {
-            connection = (HttpURLConnection) url.openConnection();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        String uriPath = uri.getPath();
+        if (TextUtils.isEmpty(uriPath)) return null;
 
-        // 增加原来的请求头
-        if (null != maps && null != maps.keySet()) {
-            for (String key : maps.keySet()) {
-                if (!TextUtils.isEmpty(key)) {
-                    connection.addRequestProperty(key, maps.get(key));
-                }
+        String localCachePath = HybridCacheUtils.convertUriToFilePath(uri);
+        // 如果缓存存在，则取缓存
+        if (HybridCacheUtils.checkPathExist(localCachePath)) {
+            try {
+                InputStream is = new FileInputStream(new File(localCachePath));
+                return new WebResourceResponse(HybridCacheUtils.getResourceType(uriPath), "UTF-8", is);
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        }
-
-        // 请求访问失败，返回
-        int responseCode = -1;
-        try {
-            responseCode = connection.getResponseCode();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (responseCode != 200) {
-            return null;
-        }
-
-        InputStream inputStream = null;
-        try {
-            inputStream = connection.getInputStream();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if (null == inputStream) {
-            return null;
-        }
-
-        String contentType = connection.getContentType();
-        String htmlMimeType = CacheUtils.getHtmlMimeType(contentType);
-        String htmlEncoding = CacheUtils.getHtmlEncoding(contentType);
-        WebResourceResponse webResourceResponse;
-
-        if (mIsWhiteList && !TextUtils.isEmpty(contentType) && contentType.contains("application/json")) {
-            //请求数据接口需判断返回code是否为-1
-            ByteArrayOutputStream outputStream = CacheUtils.inputStreamCache(inputStream);
-            JsonObject result = CacheUtils.getJsonObjectFromOutputStream(outputStream);
-            if (mBizWebViewClient.interceptRequestNetworkResult(result)) return null;
-            webResourceResponse = new WebResourceResponse(htmlMimeType, htmlEncoding, CacheUtils.getInputStream(outputStream));
         } else {
-            webResourceResponse = new WebResourceResponse(htmlMimeType, htmlEncoding, inputStream);
+            // 不存在，缓存在本地
+            HybridCacheUtils.saveResource(uri, HybridCacheUtils.convertUriToFilePath(uri), null);
         }
-
-        // 获取返回的请求头
-        Map<String, String> webResourceResponseHeaders = new HashMap<>();
-        Map<String, List<String>> headerFields = connection.getHeaderFields();
-        if (null != headerFields && null != headerFields.keySet()) {
-            for (String key : headerFields.keySet()) {
-                List<String> headers = headerFields.get(key);
-                if (null != headers && headers.size() > 0) {
-                    webResourceResponseHeaders.put(key, headers.get(0));
-                }
-            }
-            webResourceResponse.setResponseHeaders(webResourceResponseHeaders);
-        }
-        return webResourceResponse;
+        return null;
     }
 }
